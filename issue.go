@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/adriacidre/fsm"
+	"log"
 )
 
 type Issue struct {
@@ -14,6 +15,14 @@ type Issue struct {
 
 	// our machine cache
 	machine *fsm.Machine
+}
+
+func (i *Issue) toJSON() *[]byte {
+	json, err := json.Marshal(i)
+	if err != nil {
+		log.Println(err)
+	}
+	return &json
 }
 
 // Add methods to comply with the fsm.Stater interface

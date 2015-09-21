@@ -21,12 +21,13 @@ func (this *Subscriber) subscribe() {
 	c, _ := nats.NewEncodedConn(nc, nats.JSON_ENCODER)
 	defer c.Close()
 
-	c.Subscribe("issue.update", func(body string) {
-		this.manageIssue(body)
+	c.Subscribe("issue.update", func(m *nats.Msg) {
+		i := this.manageIssue(string(m.Data))
+		c.Publish(m.Reply, i.toJSON())
 	})
 }
 
-func (this *Subscriber) manageIssue(body string) {
+func (this *Subscriber) manageIssue(body string) *Issue {
 	input := InputIssue{}
 	if err := json.Unmarshal([]byte(body), &input); err != nil {
 		panic(err)
@@ -34,8 +35,10 @@ func (this *Subscriber) manageIssue(body string) {
 	this.Input = &input
 	i := this.Storage.GetIssue(this.Input.Issue)
 	if i == nil {
-		return
+		return nil
 	}
 	this.Workflow.transact(i, this.Input.Status)
 	this.Storage.SetIssue(i)
+
+	return i
 }
