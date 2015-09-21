@@ -21,19 +21,23 @@ func (this *Subscriber) subscribe() {
 	c, _ := nats.NewEncodedConn(nc, nats.JSON_ENCODER)
 	defer c.Close()
 
-	c.Subscribe("issue.update", func(m *nats.Msg) {
+	c.Subscribe("issues.update", func(m *nats.Msg) {
 		i := this.manageIssue(string(m.Data))
+		c.Publish(m.Reply, i.toJSON())
+	})
+
+	c.Subscribe("issues.details", func(m *nats.Msg) {
+		i := this.issueDetails(string(m.Data))
 		c.Publish(m.Reply, i.toJSON())
 	})
 }
 
+func (this *Subscriber) issueDetails(body string) *Issue {
+	return this.getIssueFromRequest(body)
+}
+
 func (this *Subscriber) manageIssue(body string) *Issue {
-	input := InputIssue{}
-	if err := json.Unmarshal([]byte(body), &input); err != nil {
-		panic(err)
-	}
-	this.Input = &input
-	i := this.Storage.GetIssue(this.Input.Issue)
+	i := this.getIssueFromRequest(body)
 	if i == nil {
 		return nil
 	}
@@ -41,4 +45,13 @@ func (this *Subscriber) manageIssue(body string) *Issue {
 	this.Storage.SetIssue(i)
 
 	return i
+}
+
+func (this *Subscriber) getIssueFromRequest(body string) *Issue {
+	input := InputIssue{}
+	if err := json.Unmarshal([]byte(body), &input); err != nil {
+		panic(err)
+	}
+	this.Input = &input
+	return this.Storage.GetIssue(this.Input.Issue)
 }
