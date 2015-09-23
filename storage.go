@@ -8,6 +8,7 @@ import (
 	"os"
 )
 
+// Struct representing Redis client
 type Storage struct {
 	Addr     string
 	Password string
@@ -19,6 +20,7 @@ type storageConfig struct {
 	Storage Storage `json:"redis"`
 }
 
+// Setup the client from a config source string
 func (s *Storage) setup(source string) {
 	c := storageConfig{}
 	file, err := os.Open(source)
@@ -39,6 +41,7 @@ func (s *Storage) setup(source string) {
 	})
 }
 
+// Builds a to be stored key from a given string
 func (s *Storage) buildKey(str string) string {
 	return str
 }
@@ -56,6 +59,7 @@ func (s *Storage) get(key string) (string, error) {
 	return s.Client.Get(key).Result()
 }
 
+// Gets an issue from database from its id
 func (s *Storage) GetIssue(id string) *Issue {
 	key := s.buildKey(id)
 	str, err := s.get(key)
@@ -71,8 +75,9 @@ func (s *Storage) GetIssue(id string) *Issue {
 	return &i
 }
 
+// Store an issue on the database
 func (s *Storage) SetIssue(i *Issue) {
 	key := s.buildKey(i.ID)
-	value := i.toJson()
-	s.set(key, value)
+	value := i.toJSON()
+	s.set(key, string(*value))
 }

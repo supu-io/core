@@ -6,6 +6,7 @@ import (
 	"log"
 )
 
+// Struct representing an Issue
 type Issue struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`
@@ -17,6 +18,7 @@ type Issue struct {
 	machine *fsm.Machine
 }
 
+// Get json representation of an issue
 func (i *Issue) toJSON() *[]byte {
 	json, err := json.Marshal(i)
 	if err != nil {
@@ -25,7 +27,7 @@ func (i *Issue) toJSON() *[]byte {
 	return &json
 }
 
-// Add methods to comply with the fsm.Stater interface
+// Add methods to accomplish the fsm.Stater interface
 func (t *Issue) CurrentState() fsm.State { return t.State }
 
 func (t *Issue) SetState(s fsm.State) {
@@ -44,9 +46,4 @@ func (t *Issue) Apply(w *Workflow, s string) *fsm.Machine {
 
 	t.machine.Rules = r
 	return t.machine
-}
-
-func (i *Issue) toJson() string {
-	json, _ := json.Marshal(i)
-	return string(json)
 }

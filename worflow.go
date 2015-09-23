@@ -7,6 +7,8 @@ import (
 type Workflow struct {
 }
 
+// Workflow definition
+// This method describes the default workflow for an issue
 func (w *Workflow) workflowRules() *fsm.Ruleset {
 	rules := fsm.Ruleset{}
 
@@ -22,12 +24,16 @@ func (w *Workflow) workflowRules() *fsm.Ruleset {
 	return &rules
 }
 
+// Apply a transition to the given issue
 func (w *Workflow) transact(issue *Issue, event string) error {
 	e := fsm.State(event)
 	return issue.Apply(w, event).Transition(e)
 }
 
 // Hook manager
+// When a issue moves from an state to the next one, a
+// hook is executed, here you can find the mapped status
+// to its hooks
 func (w *Workflow) Hook(from fsm.State, to fsm.State) error {
 	switch to {
 	case "in_progress":
@@ -44,6 +50,7 @@ func (w *Workflow) Hook(from fsm.State, to fsm.State) error {
 	return nil
 }
 
+// Hook executed when a issue moves to "In Progress".
 func (w *Workflow) toInProgressHook(from fsm.State) {
 	switch from {
 	case "created":
@@ -57,18 +64,22 @@ func (w *Workflow) toInProgressHook(from fsm.State) {
 	}
 }
 
+// Hook executed when a issue moves to "CI"
 func (w *Workflow) toCiHook(from fsm.State) {
 	w.inProgressToCiHook()
 }
 
+// Hook executed when a issue moves to "In Review"
 func (w *Workflow) toInReviewHook(from fsm.State) {
 	w.ciToInReviewHook()
 }
 
+// Hook kexecuted when a issue moves to "UAT"
 func (w *Workflow) toUatHook(from fsm.State) {
 	w.inReviewToUatHook()
 }
 
+// Hook executed when a issue moves to "Done".
 func (w *Workflow) toDoneHook(from fsm.State) {
 	w.uatToDoneHook()
 }
@@ -81,9 +92,7 @@ func (w *Workflow) createdToInProgressHook() {
 
 // Event launched when a pull request is opened and
 // every time new commits happen
-func (w *Workflow) inProgressToCiHook() {
-	//
-}
+func (w *Workflow) inProgressToCiHook()       {}
 func (w *Workflow) ciToInProgressHook()       {}
 func (w *Workflow) ciToInReviewHook()         {}
 func (w *Workflow) inReviewToUatHook()        {}
