@@ -33,6 +33,7 @@ Please check the whole Project Documentation repo at:
 
 ## Build status
 
+* Branch Master : [![Build Status Master](https://travis-ci.org/supu-io/core.svg?branch=master)](https://travis-ci.org/supu-io/core)
 
 ## Bugs and feature requests
 

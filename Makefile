@@ -4,3 +4,5 @@ deps:
 	go get -u gopkg.in/redis.v3""
 build:
 	go build .
+test:
+	go test
