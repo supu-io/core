@@ -1,6 +1,7 @@
 language: go
+services:
+  - redis-server
 go:
- - 1.1
  - 1.2
  - tip
 install: make deps && make dev-deps

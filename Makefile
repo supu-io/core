@@ -7,4 +7,5 @@ dev-deps:
 build:
 	go build .
 test:
+	cp config.json.tpl config.json
 	go test
