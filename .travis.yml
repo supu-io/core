@@ -3,5 +3,5 @@ go:
  - 1.1
  - 1.2
  - tip
-install: make deps
+install: make deps && make dev-deps
 script: make test
