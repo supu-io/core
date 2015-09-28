@@ -11,17 +11,17 @@ func TestValidTransitions(t *testing.T) {
 	w := Workflow{}
 	Convey("Given an issue on created status", t, func() {
 		issue := Issue{State: "created"}
-		Convey("When I apply an in_progress event", func() {
-			err := w.transact(&issue, "in_progress")
-			Convey("Then issue state should be in_progress", func() {
-				So(issue.State, ShouldEqual, "in_progress")
+		Convey("When I apply an todo event", func() {
+			err := w.transact(&issue, "todo")
+			Convey("Then issue state should be todo", func() {
+				So(issue.State, ShouldEqual, "todo")
 				So(err, ShouldBeNil)
 			})
 		})
 	})
 
-	Convey("Given an issue on in_progress status", t, func() {
-		issue := Issue{State: "in_progress"}
+	Convey("Given an issue on doing status", t, func() {
+		issue := Issue{State: "doing"}
 		Convey("When I apply an ci event", func() {
 			err := w.transact(&issue, "ci")
 			Convey("Then issue state should be ci", func() {
@@ -33,10 +33,10 @@ func TestValidTransitions(t *testing.T) {
 
 	Convey("Given an issue on ci status", t, func() {
 		issue := Issue{State: "ci"}
-		Convey("When I apply an in_review event", func() {
-			err := w.transact(&issue, "in_review")
-			Convey("Then issue state should be in_review", func() {
-				So(issue.State, ShouldEqual, "in_review")
+		Convey("When I apply an review event", func() {
+			err := w.transact(&issue, "review")
+			Convey("Then issue state should be review", func() {
+				So(issue.State, ShouldEqual, "review")
 				So(err, ShouldBeNil)
 			})
 		})
@@ -44,28 +44,28 @@ func TestValidTransitions(t *testing.T) {
 
 	Convey("Given an issue on ci status", t, func() {
 		issue := Issue{State: "ci"}
-		Convey("When I apply an in_progress event", func() {
-			err := w.transact(&issue, "in_progress")
-			Convey("Then issue state should be in_progress", func() {
-				So(issue.State, ShouldEqual, "in_progress")
+		Convey("When I apply an doing event", func() {
+			err := w.transact(&issue, "doing")
+			Convey("Then issue state should be doing", func() {
+				So(issue.State, ShouldEqual, "doing")
 				So(err, ShouldBeNil)
 			})
 		})
 	})
 
-	Convey("Given an issue on in_review status", t, func() {
-		issue := Issue{State: "in_review"}
-		Convey("When I apply an in_progress event", func() {
-			err := w.transact(&issue, "in_progress")
-			Convey("Then issue state should be in_progress", func() {
-				So(issue.State, ShouldEqual, "in_progress")
+	Convey("Given an issue on review status", t, func() {
+		issue := Issue{State: "review"}
+		Convey("When I apply an doing event", func() {
+			err := w.transact(&issue, "doing")
+			Convey("Then issue state should be doing", func() {
+				So(issue.State, ShouldEqual, "doing")
 				So(err, ShouldBeNil)
 			})
 		})
 	})
 
-	Convey("Given an issue on in_review status", t, func() {
-		issue := Issue{State: "in_review"}
+	Convey("Given an issue on review status", t, func() {
+		issue := Issue{State: "review"}
 		Convey("When I apply an uat event", func() {
 			err := w.transact(&issue, "uat")
 			Convey("Then issue state should be uat", func() {
@@ -77,10 +77,10 @@ func TestValidTransitions(t *testing.T) {
 
 	Convey("Given an issue on uat status", t, func() {
 		issue := Issue{State: "uat"}
-		Convey("When I apply an in_progress event", func() {
-			err := w.transact(&issue, "in_progress")
-			Convey("Then issue state should be in_progress", func() {
-				So(issue.State, ShouldEqual, "in_progress")
+		Convey("When I apply an doing event", func() {
+			err := w.transact(&issue, "doing")
+			Convey("Then issue state should be doing", func() {
+				So(issue.State, ShouldEqual, "doing")
 				So(err, ShouldBeNil)
 			})
 		})
@@ -103,9 +103,9 @@ func TestInValidTransitions(t *testing.T) {
 	w := Workflow{}
 	Convey("Given an issue on created status", t, func() {
 		issue := Issue{State: "created"}
-		Convey("When I apply an in_progress event", func() {
+		Convey("When I apply an doing event", func() {
 			err := w.transact(&issue, "uat_ok")
-			Convey("Then issue state should be in_progress", func() {
+			Convey("Then issue state should be doing", func() {
 				So(issue.State, ShouldEqual, "created")
 				So(err.Error(), ShouldEqual, "invalid transition")
 			})

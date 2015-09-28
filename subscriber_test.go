@@ -22,10 +22,10 @@ func TestSubscriber(t *testing.T) {
 		i := Issue{ID: "foo", Name: "bar", State: "created"}
 		s.Storage.SetIssue(&i)
 		Convey("When I try to manage the existing issue", func() {
-			s.manageIssue("{\"issue\":\"foo\",\"status\":\"in_progress\"}")
+			s.manageIssue("{\"issue\":\"foo\",\"status\":\"todo\"}")
 			Convey("Then issue status get updated", func() {
 				stored := s.Storage.GetIssue(i.ID)
-				So(stored.State, ShouldEqual, "in_progress")
+				So(stored.State, ShouldEqual, "todo")
 			})
 		})
 	})

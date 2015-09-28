@@ -1,27 +1,46 @@
 package main
 
 import (
+	"encoding/json"
+	"log"
+	"os"
+
 	"github.com/adriacidre/fsm"
 )
 
+type Transition struct {
+	From string `json:"from"`
+	To   string `json:"to"`
+}
+
 type Workflow struct {
+	Transitions []Transition `json:"transitions"`
 }
 
 // Workflow definition
 // This method describes the default workflow for an issue
 func (w *Workflow) workflowRules() *fsm.Ruleset {
-	rules := fsm.Ruleset{}
+	w.load("workflows/default.json")
 
-	rules.AddTransition(fsm.T{"created", "in_progress"})
-	rules.AddTransition(fsm.T{"in_progress", "ci"})
-	rules.AddTransition(fsm.T{"ci", "in_progress"})
-	rules.AddTransition(fsm.T{"ci", "in_review"})
-	rules.AddTransition(fsm.T{"in_review", "in_progress"})
-	rules.AddTransition(fsm.T{"in_review", "uat"})
-	rules.AddTransition(fsm.T{"uat", "in_progress"})
-	rules.AddTransition(fsm.T{"uat", "done"})
+	rules := fsm.Ruleset{}
+	for _, t := range w.Transitions {
+		rules.AddTransition(fsm.T{fsm.State(t.From), fsm.State(t.To)})
+	}
 
 	return &rules
+}
+
+func (w *Workflow) load(source string) {
+	file, err := os.Open(source)
+	if err != nil {
+		log.Panic("error:", err)
+	}
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&w)
+	if err != nil {
+		log.Println("Workflow " + source + " not found")
+		log.Panic("error:", err)
+	}
 }
 
 // Apply a transition to the given issue

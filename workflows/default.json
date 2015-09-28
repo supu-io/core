@@ -1,0 +1,13 @@
+{
+  "transitions": [
+    {"from": "created",         "to": "todo"},
+    {"from": "todo",            "to": "doing"},
+    {"from": "doing",           "to": "ci"},
+    {"from": "ci",              "to": "doing"},
+    {"from": "ci",              "to": "review"},
+    {"from": "review"   ,       "to": "doing"},
+    {"from": "review",          "to": "uat"},
+    {"from": "uat",             "to": "doing"},
+    {"from": "uat",             "to": "done"}
+  ]
+}
