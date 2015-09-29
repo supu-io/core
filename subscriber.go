@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/nats-io/nats"
+	"runtime"
 )
 
 // The subscriber is listening for events happening on
@@ -17,7 +18,7 @@ type Subscriber struct {
 // fields as part of the Json body
 type InputIssue struct {
 	Issue  string `json:"issue"`
-	Status string `json:"status"`
+	Status string `json:"status,omitempty"`
 }
 
 // Subscribes to all needed events
@@ -35,6 +36,21 @@ func (this *Subscriber) subscribe() {
 		i := this.issueDetails(string(m.Data))
 		c.Publish(m.Reply, i.toJSON())
 	})
+
+	c.Subscribe("workflow.states.all", func(m *nats.Msg) {
+		i := this.issueDetails(string(m.Data))
+		s := i.AllStates()
+		json, _ := json.Marshal(s)
+		c.Publish(m.Reply, json)
+	})
+
+	c.Subscribe("workflow.states.available", func(m *nats.Msg) {
+		i := this.issueDetails(string(m.Data))
+		s := i.AvailableExitStates()
+		json, _ := json.Marshal(s)
+		c.Publish(m.Reply, json)
+	})
+	runtime.Goexit()
 }
 
 // Gets the issue details
