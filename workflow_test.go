@@ -3,16 +3,17 @@ package main
 import (
 	"testing"
 
+	"github.com/adriacidre/fsm"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestValidTransitions(t *testing.T) {
 	t.Parallel()
-	w := Workflow{}
 	Convey("Given an issue on created status", t, func() {
 		issue := Issue{State: "created"}
 		Convey("When I apply an todo event", func() {
-			err := w.transact(&issue, "todo")
+			e := fsm.State("todo")
+			err := issue.Apply("todo").Transition(e)
 			Convey("Then issue state should be todo", func() {
 				So(issue.State, ShouldEqual, "todo")
 				So(err, ShouldBeNil)
@@ -23,7 +24,8 @@ func TestValidTransitions(t *testing.T) {
 	Convey("Given an issue on doing status", t, func() {
 		issue := Issue{State: "doing"}
 		Convey("When I apply an ci event", func() {
-			err := w.transact(&issue, "ci")
+			e := fsm.State("ci")
+			err := issue.Apply("ci").Transition(e)
 			Convey("Then issue state should be ci", func() {
 				So(issue.State, ShouldEqual, "ci")
 				So(err, ShouldBeNil)
@@ -34,7 +36,8 @@ func TestValidTransitions(t *testing.T) {
 	Convey("Given an issue on ci status", t, func() {
 		issue := Issue{State: "ci"}
 		Convey("When I apply an review event", func() {
-			err := w.transact(&issue, "review")
+			e := fsm.State("review")
+			err := issue.Apply("review").Transition(e)
 			Convey("Then issue state should be review", func() {
 				So(issue.State, ShouldEqual, "review")
 				So(err, ShouldBeNil)
@@ -45,7 +48,8 @@ func TestValidTransitions(t *testing.T) {
 	Convey("Given an issue on ci status", t, func() {
 		issue := Issue{State: "ci"}
 		Convey("When I apply an doing event", func() {
-			err := w.transact(&issue, "doing")
+			e := fsm.State("doing")
+			err := issue.Apply("doing").Transition(e)
 			Convey("Then issue state should be doing", func() {
 				So(issue.State, ShouldEqual, "doing")
 				So(err, ShouldBeNil)
@@ -56,7 +60,8 @@ func TestValidTransitions(t *testing.T) {
 	Convey("Given an issue on review status", t, func() {
 		issue := Issue{State: "review"}
 		Convey("When I apply an doing event", func() {
-			err := w.transact(&issue, "doing")
+			e := fsm.State("doing")
+			err := issue.Apply("doing").Transition(e)
 			Convey("Then issue state should be doing", func() {
 				So(issue.State, ShouldEqual, "doing")
 				So(err, ShouldBeNil)
@@ -67,7 +72,8 @@ func TestValidTransitions(t *testing.T) {
 	Convey("Given an issue on review status", t, func() {
 		issue := Issue{State: "review"}
 		Convey("When I apply an uat event", func() {
-			err := w.transact(&issue, "uat")
+			e := fsm.State("uat")
+			err := issue.Apply("uat").Transition(e)
 			Convey("Then issue state should be uat", func() {
 				So(issue.State, ShouldEqual, "uat")
 				So(err, ShouldBeNil)
@@ -78,7 +84,8 @@ func TestValidTransitions(t *testing.T) {
 	Convey("Given an issue on uat status", t, func() {
 		issue := Issue{State: "uat"}
 		Convey("When I apply an doing event", func() {
-			err := w.transact(&issue, "doing")
+			e := fsm.State("doing")
+			err := issue.Apply("doing").Transition(e)
 			Convey("Then issue state should be doing", func() {
 				So(issue.State, ShouldEqual, "doing")
 				So(err, ShouldBeNil)
@@ -89,7 +96,8 @@ func TestValidTransitions(t *testing.T) {
 	Convey("Given an issue on uat status", t, func() {
 		issue := Issue{State: "uat"}
 		Convey("When I apply an done event", func() {
-			err := w.transact(&issue, "done")
+			e := fsm.State("done")
+			err := issue.Apply("done").Transition(e)
 			Convey("Then issue state should be done", func() {
 				So(issue.State, ShouldEqual, "done")
 				So(err, ShouldBeNil)
@@ -100,11 +108,11 @@ func TestValidTransitions(t *testing.T) {
 
 func TestInValidTransitions(t *testing.T) {
 	t.Parallel()
-	w := Workflow{}
 	Convey("Given an issue on created status", t, func() {
 		issue := Issue{State: "created"}
 		Convey("When I apply an doing event", func() {
-			err := w.transact(&issue, "uat_ok")
+			e := fsm.State("uat_ok")
+			err := issue.Apply("uat_ok").Transition(e)
 			Convey("Then issue state should be doing", func() {
 				So(issue.State, ShouldEqual, "created")
 				So(err.Error(), ShouldEqual, "invalid transition")

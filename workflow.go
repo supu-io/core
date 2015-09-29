@@ -14,23 +14,24 @@ type Transition struct {
 }
 
 type Workflow struct {
-	Transitions []Transition `json:"transitions"`
+	Transitions *[]Transition `json:"transitions"`
 }
 
 // Workflow definition
 // This method describes the default workflow for an issue
 func (w *Workflow) workflowRules() *fsm.Ruleset {
-	w.load("workflows/default.json")
-
+	if w == nil || w.Transitions == nil {
+		w = w.load("workflows/default.json")
+	}
 	rules := fsm.Ruleset{}
-	for _, t := range w.Transitions {
+	for _, t := range *w.Transitions {
 		rules.AddTransition(fsm.T{fsm.State(t.From), fsm.State(t.To)})
 	}
 
 	return &rules
 }
 
-func (w *Workflow) load(source string) {
+func (w *Workflow) load(source string) *Workflow {
 	file, err := os.Open(source)
 	if err != nil {
 		log.Panic("error:", err)
@@ -41,12 +42,7 @@ func (w *Workflow) load(source string) {
 		log.Println("Workflow " + source + " not found")
 		log.Panic("error:", err)
 	}
-}
-
-// Apply a transition to the given issue
-func (w *Workflow) transact(issue *Issue, event string) error {
-	e := fsm.State(event)
-	return issue.Apply(w, event).Transition(e)
+	return w
 }
 
 // Hook manager

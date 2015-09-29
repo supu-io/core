@@ -8,11 +8,9 @@ import (
 
 // Struct representing an Issue
 type Issue struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Repo  string `json:"repo"`
-	Url   string `json:"url"`
-	State fsm.State
+	ID       string    `json:"id"`
+	State    fsm.State `json:"status"`
+	Workflow *Workflow `json:"workflow"`
 
 	// our machine cache
 	machine *fsm.Machine
@@ -37,7 +35,8 @@ func (t *Issue) SetState(s fsm.State) {
 // A helpful function that lets us apply arbitrary rulesets to this
 // instances state machine without reallocating the machine. While not
 // required, it's something I like to have.
-func (t *Issue) Apply(w *Workflow, s string) *fsm.Machine {
+func (t *Issue) Apply(s string) *fsm.Machine {
+	w := t.Workflow
 	r := w.workflowRules()
 	if t.machine == nil {
 		t.machine = &fsm.Machine{Subject: t}

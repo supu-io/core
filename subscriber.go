@@ -2,22 +2,22 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/adriacidre/fsm"
 	"github.com/nats-io/nats"
+	"log"
 	"runtime"
 )
 
 // The subscriber is listening for events happening on
 // messaging system aka. nats.io
 type Subscriber struct {
-	Storage  *Storage
-	Workflow *Workflow
-	Input    *InputIssue
+	Input *InputIssue
 }
 
 // Every event received will, at least contain these two
 // fields as part of the Json body
 type InputIssue struct {
-	Issue  string `json:"issue"`
+	Issue  *Issue `json:"issue"`
 	Status string `json:"status,omitempty"`
 }
 
@@ -64,8 +64,13 @@ func (this *Subscriber) manageIssue(body string) *Issue {
 	if i == nil {
 		return nil
 	}
-	this.Workflow.transact(i, this.Input.Status)
-	this.Storage.SetIssue(i)
+	e := fsm.State(this.Input.Status)
+	err := i.Apply(this.Input.Status).Transition(e)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	i.State = fsm.State(this.Input.Status)
 
 	return i
 }
@@ -77,5 +82,5 @@ func (this *Subscriber) getIssueFromRequest(body string) *Issue {
 		panic(err)
 	}
 	this.Input = &input
-	return this.Storage.GetIssue(this.Input.Issue)
+	return input.Issue
 }
