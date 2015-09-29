@@ -8,13 +8,13 @@ import (
 	"runtime"
 )
 
-// The subscriber is listening for events happening on
+// Subscriber is listening for events happening on
 // messaging system aka. nats.io
 type Subscriber struct {
 	Input *InputIssue
 }
 
-// Every event received will, at least contain these two
+// InputIssue Every event received will, at least contain these two
 // fields as part of the Json body
 type InputIssue struct {
 	Issue  *Issue `json:"issue"`
@@ -22,65 +22,61 @@ type InputIssue struct {
 }
 
 // Subscribes to all needed events
-func (this *Subscriber) subscribe() {
+func (sub *Subscriber) subscribe() {
 	nc, _ := nats.Connect(nats.DefaultURL)
 	c, _ := nats.NewEncodedConn(nc, nats.JSON_ENCODER)
 	defer c.Close()
 
-	c.Subscribe("issues.update", func(m *nats.Msg) {
-		i := this.manageIssue(string(m.Data))
-		c.Publish(m.Reply, i.toJSON())
-	})
-
-	c.Subscribe("issues.details", func(m *nats.Msg) {
-		i := this.issueDetails(string(m.Data))
+	c.Subscribe("workflow.move", func(m *nats.Msg) {
+		i := sub.manageIssue(string(m.Data))
 		c.Publish(m.Reply, i.toJSON())
 	})
 
 	c.Subscribe("workflow.states.all", func(m *nats.Msg) {
-		i := this.issueDetails(string(m.Data))
+		i := sub.issueDetails(string(m.Data))
 		s := i.AllStates()
 		json, _ := json.Marshal(s)
 		c.Publish(m.Reply, json)
 	})
 
 	c.Subscribe("workflow.states.available", func(m *nats.Msg) {
-		i := this.issueDetails(string(m.Data))
+		i := sub.issueDetails(string(m.Data))
 		s := i.AvailableExitStates()
 		json, _ := json.Marshal(s)
 		c.Publish(m.Reply, json)
 	})
+
 	runtime.Goexit()
 }
 
 // Gets the issue details
-func (this *Subscriber) issueDetails(body string) *Issue {
-	return this.getIssueFromRequest(body)
+func (sub *Subscriber) issueDetails(body string) *Issue {
+	return sub.getIssueFromRequest(body)
 }
 
 // Manages the issue and executes the transition
-func (this *Subscriber) manageIssue(body string) *Issue {
-	i := this.getIssueFromRequest(body)
+func (sub *Subscriber) manageIssue(body string) *Issue {
+	i := sub.getIssueFromRequest(body)
 	if i == nil {
 		return nil
 	}
-	e := fsm.State(this.Input.Status)
-	err := i.Apply(this.Input.Status).Transition(e)
+	e := fsm.State(sub.Input.Status)
+	err := i.Apply(sub.Input.Status).Transition(e)
 	if err != nil {
 		log.Println(err)
 		return nil
 	}
-	i.State = fsm.State(this.Input.Status)
+	i.State = fsm.State(sub.Input.Status)
 
 	return i
 }
 
 // Unmarshalls the event body into an Issue struct
-func (this *Subscriber) getIssueFromRequest(body string) *Issue {
+func (sub *Subscriber) getIssueFromRequest(body string) *Issue {
 	input := InputIssue{}
 	if err := json.Unmarshal([]byte(body), &input); err != nil {
 		panic(err)
 	}
-	this.Input = &input
+	sub.Input = &input
 	return input.Issue
 }

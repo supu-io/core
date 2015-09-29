@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-// Struct representing an Issue
+// Issue representation
 type Issue struct {
 	ID       string    `json:"id"`
 	State    fsm.State `json:"status"`
@@ -17,24 +17,23 @@ type Issue struct {
 }
 
 // Get json representation of an issue
-func (i *Issue) toJSON() *[]byte {
-	json, err := json.Marshal(i)
+func (t *Issue) toJSON() *[]byte {
+	json, err := json.Marshal(t)
 	if err != nil {
 		log.Println(err)
 	}
 	return &json
 }
 
-// Add methods to accomplish the fsm.Stater interface
+// CurrentState get the current state for the issue
 func (t *Issue) CurrentState() fsm.State { return t.State }
 
+// SetState sets the state for the given issue
 func (t *Issue) SetState(s fsm.State) {
 	t.State = s
 }
 
-// A helpful function that lets us apply arbitrary rulesets to this
-// instances state machine without reallocating the machine. While not
-// required, it's something I like to have.
+// Apply arbitrary rules to each transition
 func (t *Issue) Apply(s string) *fsm.Machine {
 	w := t.Workflow
 	r := w.workflowRules()
@@ -47,8 +46,8 @@ func (t *Issue) Apply(s string) *fsm.Machine {
 	return t.machine
 }
 
-// Get all possible states for this issue given its particular
-// workflow
+// AllStates Get all possible states for this issue given its
+// particular workflow
 func (t *Issue) AllStates() []string {
 	states := []string{}
 	for s := range t.machine.Rules.AllStates() {
@@ -57,8 +56,8 @@ func (t *Issue) AllStates() []string {
 	return states
 }
 
-// Get all possible states for this issue given its particular
-// workflow and current status
+// AvailableExitStates Gets all possible states for this issue
+// given its particular workflow and current status
 func (t *Issue) AvailableExitStates() []string {
 	states := []string{}
 	for s := range t.machine.Rules.AvailableExit(t.State) {

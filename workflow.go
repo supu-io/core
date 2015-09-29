@@ -8,11 +8,13 @@ import (
 	"github.com/adriacidre/fsm"
 )
 
+// Transition json representation
 type Transition struct {
 	From string `json:"from"`
 	To   string `json:"to"`
 }
 
+// Workflow json representation
 type Workflow struct {
 	Transitions *[]Transition `json:"transitions"`
 }
