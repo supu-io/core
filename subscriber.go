@@ -24,26 +24,26 @@ type InputIssue struct {
 // Subscribes to all needed events
 func (sub *Subscriber) subscribe() {
 	nc, _ := nats.Connect(nats.DefaultURL)
-	c, _ := nats.NewEncodedConn(nc, nats.JSON_ENCODER)
-	defer c.Close()
 
-	c.Subscribe("workflow.move", func(m *nats.Msg) {
+	log.Println("Listening ...")
+
+	nc.Subscribe("workflow.move", func(m *nats.Msg) {
 		i := sub.manageIssue(string(m.Data))
-		c.Publish(m.Reply, i.toJSON())
+		nc.Publish(m.Reply, *i.toJSON())
 	})
 
-	c.Subscribe("workflow.states.all", func(m *nats.Msg) {
+	nc.Subscribe("workflow.states.all", func(m *nats.Msg) {
 		i := sub.issueDetails(string(m.Data))
 		s := i.AllStates()
 		json, _ := json.Marshal(s)
-		c.Publish(m.Reply, json)
+		nc.Publish(m.Reply, json)
 	})
 
-	c.Subscribe("workflow.states.available", func(m *nats.Msg) {
+	nc.Subscribe("workflow.states.available", func(m *nats.Msg) {
 		i := sub.issueDetails(string(m.Data))
 		s := i.AvailableExitStates()
 		json, _ := json.Marshal(s)
-		c.Publish(m.Reply, json)
+		nc.Publish(m.Reply, json)
 	})
 
 	runtime.Goexit()

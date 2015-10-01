@@ -49,8 +49,15 @@ func (t *Issue) Apply(s string) *fsm.Machine {
 // AllStates Get all possible states for this issue given its
 // particular workflow
 func (t *Issue) AllStates() []string {
+	w := t.Workflow
+	r := w.workflowRules()
+	if t.machine == nil {
+		t.machine = &fsm.Machine{Subject: t}
+	}
+	t.machine.Rules = r
+
 	states := []string{}
-	for s := range t.machine.Rules.AllStates() {
+	for _, s := range t.machine.Rules.AllStates() {
 		states = append(states, string(s))
 	}
 	return states
