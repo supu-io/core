@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/adriacidre/fsm"
 	"github.com/nats-io/nats"
 	"log"
 	"runtime"
@@ -26,11 +25,8 @@ func (sub *Subscriber) subscribe() {
 	nc, _ := nats.Connect(nats.DefaultURL)
 
 	log.Println("Listening ...")
-
-	nc.Subscribe("workflow.move", func(m *nats.Msg) {
-		i := sub.manageIssue(string(m.Data))
-		nc.Publish(m.Reply, *i.toJSON())
-	})
+	wm := WFMove{}
+	wm.Subscribe(nc)
 
 	nc.Subscribe("workflow.states.all", func(m *nats.Msg) {
 		i := sub.issueDetails(string(m.Data))
@@ -52,23 +48,6 @@ func (sub *Subscriber) subscribe() {
 // Gets the issue details
 func (sub *Subscriber) issueDetails(body string) *Issue {
 	return sub.getIssueFromRequest(body)
-}
-
-// Manages the issue and executes the transition
-func (sub *Subscriber) manageIssue(body string) *Issue {
-	i := sub.getIssueFromRequest(body)
-	if i == nil {
-		return nil
-	}
-	e := fsm.State(sub.Input.Status)
-	err := i.Apply(sub.Input.Status).Transition(e)
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
-	i.State = fsm.State(sub.Input.Status)
-
-	return i
 }
 
 // Unmarshalls the event body into an Issue struct
