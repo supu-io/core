@@ -16,10 +16,12 @@ type WFStatesAvailableInput struct {
 // WFStatesAvailable holds all related logic for event workflow.states.availabe
 type WFStatesAvailable struct{}
 
+// Subscribe to workflow.states.available in order to return
+// all available status for the current status of the issue
 func (w *WFStatesAvailable) Subscribe(nc *nats.Conn) {
 	e := ErrorMessage{}
 	nc.Subscribe("workflow.states.available", func(m *nats.Msg) {
-		err, i := w.mapInput(m.Data)
+		i, err := w.mapInput(m.Data)
 		if err != nil {
 			e.Error = err.Error()
 			nc.Publish(m.Reply, e.toJSON())
@@ -39,11 +41,11 @@ func (w *WFStatesAvailable) Subscribe(nc *nats.Conn) {
 }
 
 // Maps the json input to an InputMove structure
-func (w *WFStatesAvailable) mapInput(body []byte) (error, *WFStatesAvailableInput) {
+func (w *WFStatesAvailable) mapInput(body []byte) (*WFStatesAvailableInput, error) {
 	input := WFStatesAvailableInput{}
 	if err := json.Unmarshal(body, &input); err != nil {
-		return err, nil
+		return nil, err
 	}
 
-	return nil, &input
+	return &input, nil
 }

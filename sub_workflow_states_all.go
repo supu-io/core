@@ -6,19 +6,21 @@ import (
 	"github.com/nats-io/nats"
 )
 
-// InputMove is the representation for the input to
-// workflow.move
+// WFStatesAllInput is the representation for the input to
+// workflow.states.all
 type WFStatesAllInput struct {
 	Issue *Issue `json:"issue"`
 }
 
-// WFMove holds all related logic for event workflow.move
+// WFStatesAll holds all related logic for event workflow.states.all
 type WFStatesAll struct{}
 
+// Subscribe to workflow.states.all and return all valid states
+// for the given issue
 func (w *WFStatesAll) Subscribe(nc *nats.Conn) {
 	e := ErrorMessage{}
 	nc.Subscribe("workflow.states.all", func(m *nats.Msg) {
-		err, i := w.mapInput(m.Data)
+		i, err := w.mapInput(m.Data)
 		if err != nil {
 			e.Error = err.Error()
 			nc.Publish(m.Reply, e.toJSON())
@@ -38,11 +40,11 @@ func (w *WFStatesAll) Subscribe(nc *nats.Conn) {
 }
 
 // Maps the json input to an InputMove structure
-func (w *WFStatesAll) mapInput(body []byte) (error, *WFStatesAllInput) {
+func (w *WFStatesAll) mapInput(body []byte) (*WFStatesAllInput, error) {
 	input := WFStatesAllInput{}
 	if err := json.Unmarshal(body, &input); err != nil {
-		return err, nil
+		return nil, err
 	}
 
-	return nil, &input
+	return &input, nil
 }
