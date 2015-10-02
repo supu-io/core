@@ -14,26 +14,25 @@ type InputMove struct {
 	State string `json:"status,omitempty"`
 }
 
-type ErrorMessage struct {
-	Error string `json:"error"`
-}
-
 // WFMove holds all related logic for event workflow.move
 type WFMove struct{}
 
 // Given a nats connection it subscribes to workflow.move in order
 // to move an issue to its new status and execute proper hooks
 func (w *WFMove) Subscribe(nc *nats.Conn) {
+	e := ErrorMessage{}
 	nc.Subscribe("workflow.move", func(m *nats.Msg) {
 		err, input := w.mapInput(string(m.Data))
 		if err != nil {
-			nc.Publish(m.Reply, []byte(`{"error":"`+err.Error()+`"}`))
+			e.Error = err.Error()
+			nc.Publish(m.Reply, e.toJSON())
 			return
 		}
 
 		err, i := w.executeTransition(input)
 		if err != nil {
-			nc.Publish(m.Reply, []byte(`{"error":"`+err.Error()+`"}`))
+			e.Error = err.Error()
+			nc.Publish(m.Reply, e.toJSON())
 			return
 		}
 

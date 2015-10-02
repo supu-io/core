@@ -66,6 +66,13 @@ func (t *Issue) AllStates() []string {
 // AvailableExitStates Gets all possible states for this issue
 // given its particular workflow and current status
 func (t *Issue) AvailableExitStates() []string {
+	w := t.Workflow
+	r := w.workflowRules()
+	if t.machine == nil {
+		t.machine = &fsm.Machine{Subject: t}
+	}
+	t.machine.Rules = r
+
 	states := []string{}
 	for s := range t.machine.Rules.AvailableExit(t.State) {
 		states = append(states, string(s))

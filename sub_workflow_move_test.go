@@ -8,17 +8,17 @@ import (
 	"github.com/nats-io/nats"
 )
 
-var w WFMove
+var w Subscriber
 var nc *nats.Conn
 
 func setup() *nats.Conn {
 	nc, _ := nats.Connect(nats.DefaultURL)
-	w = WFMove{}
-	w.Subscribe(nc)
+	w = Subscriber{}
+	w.subscribe(nc)
 	return nc
 }
 
-func TestSubscriber(t *testing.T) {
+func TestWorkflowMove(t *testing.T) {
 	nc = setup()
 	body := []byte(`{"issue":{"id":"foo","status":"created"}, "status":"todo"}`)
 	res, err := nc.Request("workflow.move", body, 10000*time.Millisecond)
@@ -31,5 +31,38 @@ func TestSubscriber(t *testing.T) {
 
 	if i.State != "todo" {
 		t.Error("Didn't happen transition created -> todo")
+	}
+}
+
+func TestWorkflowStatesAll(t *testing.T) {
+	nc = setup()
+	body := []byte(`{"issue":{"id":"foo","status":"created"}}`)
+	res, err := nc.Request("workflow.states.all", body, 10000*time.Millisecond)
+
+	s := []string{}
+	err = json.Unmarshal(res.Data, &s)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if len(s) != 7 {
+		t.Error("Invalid number of status returned")
+	}
+}
+
+func TestWorkflowStatesAvailableExit(t *testing.T) {
+	nc = setup()
+	body := []byte(`{"issue":{"id":"foo","status":"created"}, "status": "in_progress"}`)
+	res, err := nc.Request("workflow.states.available", body, 10000*time.Millisecond)
+
+	s := []string{}
+	err = json.Unmarshal(res.Data, &s)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if len(s) != 1 {
+		t.Error("Invalid number of status returned")
+		println(len(s))
 	}
 }
