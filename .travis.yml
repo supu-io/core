@@ -1,4 +1,8 @@
 language: go
+before_script:
+  - go get -u github.com/nats-io/gnatsd
+  - gnats="$GOPATH/bin/gnatsd"
+  - $gnats &
 go:
  - 1.2
  - 1.3
