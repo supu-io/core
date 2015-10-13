@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/adriacidre/fsm"
 	"github.com/nats-io/nats"
@@ -10,8 +11,9 @@ import (
 // InputMove is the representation for the input to
 // workflow.move
 type InputMove struct {
-	Issue *Issue `json:"issue"`
-	State string `json:"status,omitempty"`
+	Issue  *Issue `json:"issue"`
+	State  string `json:"state,omitempty"`
+	Config `json:"config"`
 }
 
 // WFMove holds all related logic for event workflow.move
@@ -25,12 +27,15 @@ func (w *WFMove) Subscribe(nc *nats.Conn) {
 		input, err := w.mapInput(string(m.Data))
 		if err != nil {
 			e.Error = err.Error()
+			log.Println(string(m.Data))
+			log.Println(err.Error())
 			nc.Publish(m.Reply, e.toJSON())
 			return
 		}
 
 		i, err := w.executeTransition(input)
 		if err != nil {
+			log.Println(err.Error())
 			e.Error = err.Error()
 			nc.Publish(m.Reply, e.toJSON())
 			return
@@ -47,6 +52,10 @@ func (w *WFMove) executeTransition(i *InputMove) (*Issue, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	i.Issue.Config = i.Config
+	Hook(i.Issue, fsm.State(i.State))
+
 	i.Issue.State = fsm.State(i.State)
 
 	return i.Issue, nil

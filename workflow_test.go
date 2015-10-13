@@ -23,18 +23,6 @@ func TestValidTransitions(t *testing.T) {
 
 	Convey("Given an issue on doing status", t, func() {
 		issue := Issue{State: "doing"}
-		Convey("When I apply an ci event", func() {
-			e := fsm.State("ci")
-			err := issue.Apply("ci").Transition(e)
-			Convey("Then issue state should be ci", func() {
-				So(issue.State, ShouldEqual, "ci")
-				So(err, ShouldBeNil)
-			})
-		})
-	})
-
-	Convey("Given an issue on ci status", t, func() {
-		issue := Issue{State: "ci"}
 		Convey("When I apply an review event", func() {
 			e := fsm.State("review")
 			err := issue.Apply("review").Transition(e)
@@ -45,13 +33,13 @@ func TestValidTransitions(t *testing.T) {
 		})
 	})
 
-	Convey("Given an issue on ci status", t, func() {
-		issue := Issue{State: "ci"}
-		Convey("When I apply an doing event", func() {
-			e := fsm.State("doing")
-			err := issue.Apply("doing").Transition(e)
-			Convey("Then issue state should be doing", func() {
-				So(issue.State, ShouldEqual, "doing")
+	Convey("Given an issue on doing status", t, func() {
+		issue := Issue{State: "doing"}
+		Convey("When I apply an todo event", func() {
+			e := fsm.State("todo")
+			err := issue.Apply("todo").Transition(e)
+			Convey("Then issue state should be todo", func() {
+				So(issue.State, ShouldEqual, "todo")
 				So(err, ShouldBeNil)
 			})
 		})

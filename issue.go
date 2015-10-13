@@ -6,11 +6,21 @@ import (
 	"log"
 )
 
+type Github struct {
+	Token  string `json:"token"`
+	Labels []string
+}
+
+type Config struct {
+	Github `json:"github"`
+}
+
 // Issue representation
 type Issue struct {
 	ID       string    `json:"id"`
 	State    fsm.State `json:"status"`
 	Workflow *Workflow `json:"workflow"`
+	Config   `json:"config"`
 
 	// our machine cache
 	machine *fsm.Machine
@@ -35,12 +45,14 @@ func (t *Issue) SetState(s fsm.State) {
 
 // Apply arbitrary rules to each transition
 func (t *Issue) Apply(s string) *fsm.Machine {
-	w := t.Workflow
+	w := Workflow{}
+	if t.Workflow != nil {
+		w = *t.Workflow
+	}
 	r := w.workflowRules()
 	if t.machine == nil {
 		t.machine = &fsm.Machine{Subject: t}
 	}
-	w.Hook(t.State, fsm.State(s))
 
 	t.machine.Rules = r
 	return t.machine
