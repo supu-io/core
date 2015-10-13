@@ -20,7 +20,7 @@ func setup() *nats.Conn {
 
 func TestWorkflowMove(t *testing.T) {
 	nc = setup()
-	body := []byte(`{"issue":{"id":"foo","status":"created"}, "status":"todo"}`)
+	body := []byte(`{"issue":{"id":"foo","status":"created"}, "state":"todo"}`)
 	res, err := nc.Request("workflow.move", body, 10000*time.Millisecond)
 
 	i := Issue{}
@@ -29,6 +29,7 @@ func TestWorkflowMove(t *testing.T) {
 		t.Error(err.Error())
 	}
 
+	println(i.State)
 	if i.State != "todo" {
 		t.Error("Didn't happen transition created -> todo")
 	}
@@ -45,7 +46,8 @@ func TestWorkflowStatesAll(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	if len(s) != 7 {
+	println(len(s))
+	if len(s) != 6 {
 		t.Error("Invalid number of status returned")
 	}
 }

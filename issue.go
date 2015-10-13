@@ -6,11 +6,13 @@ import (
 	"log"
 )
 
+// Github ...
 type Github struct {
 	Token  string `json:"token"`
 	Labels []string
 }
 
+// Config ...
 type Config struct {
 	Github `json:"github"`
 }
