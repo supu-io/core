@@ -20,14 +20,8 @@ type WFStatesAll struct{}
 func (w *WFStatesAll) Subscribe(nc *nats.Conn) {
 	e := ErrorMessage{}
 	nc.Subscribe("workflow.states.all", func(m *nats.Msg) {
-		i, err := w.mapInput(m.Data)
-		if err != nil {
-			e.Error = err.Error()
-			nc.Publish(m.Reply, e.toJSON())
-			return
-		}
-
-		s := i.Issue.AllStates()
+		i := Issue{}
+		s := i.AllStates()
 		json, err := json.Marshal(s)
 		if err != nil {
 			e.Error = err.Error()

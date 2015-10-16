@@ -4,7 +4,7 @@
     {"from": "todo",            "to": "doing"},
     {"from": "doing",           "to": "review"},
     {"from": "doing",           "to": "todo"},
-    {"from": "review"   ,       "to": "doing"},
+    {"from": "review",          "to": "doing"},
     {"from": "review",          "to": "uat"},
     {"from": "uat",             "to": "doing"},
     {"from": "uat",             "to": "done"}
