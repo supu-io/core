@@ -6,15 +6,8 @@ import (
 
 	"github.com/adriacidre/fsm"
 	"github.com/nats-io/nats"
+	"github.com/supu-io/messages"
 )
-
-// InputMove is the representation for the input to
-// workflow.move
-type InputMove struct {
-	Issue  *Issue `json:"issue"`
-	State  string `json:"state,omitempty"`
-	Config `json:"config"`
-}
 
 // WFMove holds all related logic for event workflow.move
 type WFMove struct{}
@@ -41,29 +34,33 @@ func (w *WFMove) Subscribe(nc *nats.Conn) {
 			return
 		}
 
-		nc.Publish(m.Reply, *i.toJSON())
+		nc.Publish(m.Reply, ToJSON(i))
 	})
 }
 
 // Executes a transition for a given input
-func (w *WFMove) executeTransition(i *InputMove) (*Issue, error) {
-	e := fsm.State(i.State)
-	err := i.Issue.Apply(i.State).Transition(e)
+func (w *WFMove) executeTransition(input *messages.UpdateIssue) (*messages.UpdateIssue, error) {
+	e := fsm.State(input.Status)
+	i := Issue{
+		ID:    input.Issue.ID,
+		State: fsm.State(input.Issue.Status),
+	}
+	err := i.Apply(input.Status).Transition(e)
 	if err != nil {
 		return nil, err
 	}
 
-	i.Issue.Config = i.Config
-	Hook(i.Issue, fsm.State(i.State))
+	i.Config = i.Config
+	Hook(input.Issue, input.Config, string(i.State))
 
-	i.Issue.State = fsm.State(i.State)
+	input.Issue.Status = string(i.State)
 
-	return i.Issue, nil
+	return input, nil
 }
 
 // Maps the json input to an InputMove structure
-func (w *WFMove) mapInput(body string) (*InputMove, error) {
-	input := InputMove{}
+func (w *WFMove) mapInput(body string) (*messages.UpdateIssue, error) {
+	input := messages.UpdateIssue{}
 	if err := json.Unmarshal([]byte(body), &input); err != nil {
 		return nil, err
 	}

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/nats-io/nats"
+	"github.com/supu-io/messages"
 )
 
 var w Subscriber
@@ -20,17 +21,25 @@ func setup() *nats.Conn {
 
 func TestWorkflowMove(t *testing.T) {
 	nc = setup()
-	body := []byte(`{"issue":{"id":"foo","status":"created"}, "state":"todo"}`)
+	msg := messages.UpdateIssue{
+		Issue: &messages.Issue{
+			ID:     "foo",
+			Status: "created",
+		},
+		Status: "todo",
+		Config: messages.Config{},
+	}
+	body, err := json.Marshal(msg)
 	res, err := nc.Request("workflow.move", body, 10000*time.Millisecond)
 
-	i := Issue{}
+	i := messages.UpdateIssue{}
 	err = json.Unmarshal(res.Data, &i)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	println(i.State)
-	if i.State != "todo" {
+	println(i.Status)
+	if i.Status != "todo" {
 		t.Error("Didn't happen transition created -> todo")
 	}
 }
