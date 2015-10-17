@@ -7,73 +7,67 @@ import (
 
 	"github.com/nats-io/nats"
 	"github.com/supu-io/messages"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
-var w Subscriber
 var nc *nats.Conn
 
-func setup() *nats.Conn {
-	nc, _ := nats.Connect(nats.DefaultURL)
-	w = Subscriber{}
-	w.subscribe(nc)
-	return nc
+func setup() {
+	nc, _ = nats.Connect(nats.DefaultURL)
 }
 
-func TestWorkflowMove(t *testing.T) {
-	nc = setup()
-	msg := messages.UpdateIssue{
-		Issue: &messages.Issue{
-			ID:     "foo",
-			Status: "created",
-		},
-		Status: "todo",
-		Config: messages.Config{},
-	}
-	body, err := json.Marshal(msg)
-	res, err := nc.Request("workflow.move", body, 10000*time.Millisecond)
+func subscribeIssuesUpdate(t *testing.T) {
+	sub, _ := nc.Subscribe("issues.update", func(m *nats.Msg) {
+		Convey("Then a message must be sent to the hook", t, func() {
+			res := messages.UpdateIssue{}
+			json.Unmarshal(m.Data, &res)
 
-	i := messages.UpdateIssue{}
-	err = json.Unmarshal(res.Data, &i)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	println(i.Status)
-	if i.Status != "todo" {
-		t.Error("Didn't happen transition created -> todo")
-	}
+			So(res.Issue.ID, ShouldEqual, "org/repo/1")
+			So(res.Issue.Org, ShouldEqual, "org")
+			So(res.Issue.Repo, ShouldEqual, "repo")
+			So(res.Issue.Number, ShouldEqual, 1)
+		})
+	})
+	sub.AutoUnsubscribe(1)
 }
 
-func TestWorkflowStatesAll(t *testing.T) {
-	nc = setup()
-	body := []byte(`{"issue":{"id":"foo","status":"created"}}`)
-	res, err := nc.Request("workflow.states.all", body, 10000*time.Millisecond)
+func TestSubscribe(t *testing.T) {
+	setup()
+	Convey("Given a valid workflow.move message", t, func() {
+		msg := messages.UpdateIssue{
+			Issue: &messages.Issue{
+				ID:     "org/repo/1",
+				Number: 1,
+				Status: "created",
+				Org:    "org",
+				Repo:   "repo",
+			},
+			Status: "todo",
+		}
+		body, _ := json.Marshal(&msg)
+		Convey("When send the message", func() {
+			subscribeIssuesUpdate(t)
+			response, err := nc.Request("workflow.move", body, 1000*time.Millisecond)
+			Convey("Then issue state should be todo", func() {
+				res := messages.UpdateIssue{}
+				json.Unmarshal(response.Data, &res)
 
-	s := []string{}
-	err = json.Unmarshal(res.Data, &s)
-	if err != nil {
-		t.Error(err.Error())
-	}
+				So(res.Issue.ID, ShouldEqual, "org/repo/1")
+				So(res.Issue.Org, ShouldEqual, "org")
+				So(res.Issue.Repo, ShouldEqual, "repo")
+				So(res.Issue.Number, ShouldEqual, 1)
+				So(res.Issue.Status, ShouldEqual, "todo")
+				So(err, ShouldBeNil)
+			})
+		})
+	})
 
-	println(len(s))
-	if len(s) != 6 {
-		t.Error("Invalid number of status returned")
-	}
-}
+	Convey("Given an invalid workflow.move message", t, func() {
+		body := []byte("")
+		response, err := nc.Request("workflow.move", body, 1000*time.Millisecond)
+		So(err, ShouldBeNil)
+		So(string(response.Data), ShouldEqual, `{"error":"unexpected end of JSON input"}`)
+	})
 
-func TestWorkflowStatesAvailableExit(t *testing.T) {
-	nc = setup()
-	body := []byte(`{"issue":{"id":"foo","status":"created"}, "status": "in_progress"}`)
-	res, err := nc.Request("workflow.states.available", body, 10000*time.Millisecond)
-
-	s := []string{}
-	err = json.Unmarshal(res.Data, &s)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	if len(s) != 1 {
-		t.Error("Invalid number of status returned")
-		println(len(s))
-	}
 }

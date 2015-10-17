@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 
 	"github.com/adriacidre/fsm"
 	"github.com/nats-io/nats"
@@ -20,15 +19,12 @@ func (w *WFMove) Subscribe(nc *nats.Conn) {
 		input, err := w.mapInput(string(m.Data))
 		if err != nil {
 			e.Error = err.Error()
-			log.Println(string(m.Data))
-			log.Println(err.Error())
 			nc.Publish(m.Reply, e.toJSON())
 			return
 		}
 
 		i, err := w.executeTransition(input)
 		if err != nil {
-			log.Println(err.Error())
 			e.Error = err.Error()
 			nc.Publish(m.Reply, e.toJSON())
 			return
@@ -50,9 +46,7 @@ func (w *WFMove) executeTransition(input *messages.UpdateIssue) (*messages.Updat
 		return nil, err
 	}
 
-	i.Config = i.Config
 	Hook(input.Issue, input.Config, string(i.State))
-
 	input.Issue.Status = string(i.State)
 
 	return input, nil
