@@ -35,6 +35,8 @@ func subscribeIssuesUpdate(t *testing.T) {
 func TestSubscribe(t *testing.T) {
 	setup()
 	Convey("Given a valid workflow.move message", t, func() {
+		w := WFMove{}
+		w.Subscribe(nc)
 		msg := messages.UpdateIssue{
 			Issue: &messages.Issue{
 				ID:     "org/repo/1",
@@ -64,6 +66,8 @@ func TestSubscribe(t *testing.T) {
 	})
 
 	Convey("Given an invalid workflow.move message", t, func() {
+		w := WFMove{}
+		w.Subscribe(nc)
 		body := []byte("")
 		response, err := nc.Request("workflow.move", body, 1000*time.Millisecond)
 		So(err, ShouldBeNil)
