@@ -9,8 +9,7 @@ import (
 // WFStatesAvailableInput is the representation for the input to
 // workflow.status.available
 type WFStatesAvailableInput struct {
-	Issue  *Issue `json:"issue"`
-	Status string `json:"status"`
+	Issue *Issue `json:"issue"`
 }
 
 // WFStatesAvailable holds all related logic for event workflow.states.availabe
